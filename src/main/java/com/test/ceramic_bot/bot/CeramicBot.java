@@ -10,6 +10,9 @@ import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardButton;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import java.util.*;
@@ -54,13 +57,52 @@ public class CeramicBot extends TelegramLongPollingBot {
                     userService.addUser(telegramId, userName, Role.ROLE_USER);
                     sendMessage(chatId, "환영합니다, " + userName + "님! 초음 오셨군요. \uD83D\uDC4B");
                 }
-            } else if (messageText.startsWith("/add_admin")) {
+                showCategoryButton(chatId);
+            } else if (messageText.startsWith("/add_admin")) {          //admin logic
                 handleAddAdminCommand(chatId, messageText, userName);
             } else if (messageText.startsWith("/remove_admin")) {
                 handleRemoveAdminCommand(chatId, messageText, userName);
+            } else if (messageText.startsWith("Product Category")) {
+                handleProductCategoryButton(chatId);         // handle button click
             } else {
                 sendMessage(chatId, "잘못된 명령어입니다. 다시 시도해 주세요!");
             }
+        }
+    }
+
+    private void handleProductCategoryButton(Long chatId) {
+        sendMessage(chatId, "You clicked the Product Category Button!");
+    }
+
+    private void showCategoryButton(Long chatId) {
+        //키보드 생성
+        ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup();
+        replyKeyboardMarkup.setSelective(true);
+        replyKeyboardMarkup.setResizeKeyboard(true);  // 키보드 크기 자동 조정
+        replyKeyboardMarkup.setOneTimeKeyboard(false); // 한 번 사용하고 사라지지 않게 설정
+
+        // 키보드에 추가할 버튼을 정의
+        KeyboardRow keyboardRow = new KeyboardRow();
+        keyboardRow.add(new KeyboardButton("Product Category"));
+
+        // 키보드에 버튼 추가
+        List<KeyboardRow> keyboardRows = new ArrayList<>();
+        keyboardRows.add(keyboardRow);
+        replyKeyboardMarkup.setKeyboard(keyboardRows);
+
+        // 메시지와 함께 키보드를 전송
+        sendMessageWithKeyboard(chatId, "Welcome! Choose an option:", replyKeyboardMarkup);
+    }
+
+    private void sendMessageWithKeyboard(Long chatId, String text, ReplyKeyboardMarkup replyKeyboardMarkup) {
+        SendMessage message = new SendMessage();
+        message.setChatId(chatId.toString());
+        message.setText(text);
+        message.setReplyMarkup(replyKeyboardMarkup);
+        try {
+            execute(message);
+        } catch (TelegramApiException e) {
+            e.printStackTrace();
         }
     }
 
